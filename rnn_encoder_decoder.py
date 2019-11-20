@@ -2,7 +2,7 @@ import collections
 
 import helper
 import numpy as np
-import project_tests as tests
+#import project_tests as tests
 from tensorflow.keras.models import Sequential
 
 from tensorflow.keras.preprocessing.text import Tokenizer
@@ -12,7 +12,7 @@ from tensorflow.keras.layers import GRU, Input, Dense, TimeDistributed, Activati
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import sparse_categorical_crossentropy
-from nltk.translate.bleu_score import corpus_bleu
+#from nltk.translate.bleu_score import corpus_bleu
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
@@ -75,7 +75,7 @@ def pad(x, length=None):
         length = max([len(sentence) for sentence in x])
     return pad_sequences(x, maxlen = length, padding = 'post')
 
-tests.test_pad(pad)
+#tests.test_pad(pad)
 
 # Pad Tokenized output
 test_pad = pad(text_tokenized)
@@ -157,7 +157,7 @@ encodeco_model = encdec_model(
     preproc_french_sentences.shape[1],
     len(english_tokenizer.word_index)+1,
     len(french_tokenizer.word_index)+1)
-encodeco_model.fit(tmp_x, preproc_french_sentences, batch_size=1024, epochs=2, validation_split=0.2)
+encodeco_model.fit(tmp_x, preproc_french_sentences, batch_size=128, epochs=10, validation_split=0.2)
 print(logits_to_text(encodeco_model.predict(tmp_x[:1])[0], french_tokenizer))
 
 
