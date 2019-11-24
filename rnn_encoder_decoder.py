@@ -1,6 +1,7 @@
 import collections
 
 import helper
+import argparse
 import numpy as np
 import project_tests as tests
 from tensorflow.keras.models import Sequential
@@ -12,7 +13,7 @@ from tensorflow.keras.layers import GRU, Input, Dense, TimeDistributed, Activati
 from tensorflow.keras.layers import Embedding
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.losses import sparse_categorical_crossentropy
-from nltk.translate.bleu_score import corpus_bleu
+from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 
 from tensorflow.python.client import device_lib
 print(device_lib.list_local_devices())
@@ -143,22 +144,48 @@ def encdec_model(input_shape, output_sequence_length, english_vocab_size, french
     model.add(GRU(128, return_sequences = True))
     model.add(TimeDistributed(Dense(french_vocab_size, activation = 'softmax')))
     
-    model.compile(loss = sparse_categorical_crossentropy, 
-                 optimizer = Adam(learning_rate), 
-                 metrics = ['accuracy'])
-    return model
-#tests.test_encdec_model(encdec_model)
-tmp_x = pad(preproc_english_sentences)
-tmp_x = tmp_x.reshape((-1, preproc_english_sentences.shape[1], 1))
-tmp_x = np.float32(tmp_x)
+    # model.compile(loss = sparse_categorical_crossentropy, 
+    #              optimizer = Adam(learning_rate), 
+    #              metrics = ['accuracy'])
 
-encodeco_model = encdec_model(
-    tmp_x.shape,
-    preproc_french_sentences.shape[1],
-    len(english_tokenizer.word_index)+1,
-    len(french_tokenizer.word_index)+1)
-encodeco_model.fit(tmp_x, preproc_french_sentences, batch_size=1024, epochs=2, validation_split=0.2)
-print(logits_to_text(encodeco_model.predict(tmp_x[:1])[0], french_tokenizer))
+    return model
+
+def main(args):
+    x = pad(preproc_english_sentences)
+    x = x.reshape((-1, preproc_english_sentences.shape[1], 1))
+    x = np.float32(x)
+
+    es = EarlyStopping(monitor=args.monitor, mode='auto', verbose=1, patience=args.patience)
+    cb_list = [es]
+
+    encodeco_model = encdec_model(x.shape, preproc_french_sentences.shape[1],
+        len(english_tokenizer.word_index)+1,len(french_tokenizer.word_index)+1)
+
+    encodeco_model.compile(loss = sparse_categorical_crossentropy, 
+                 optimizer = Adam(args.learning_rate), 
+                 metrics = ['accuracy'])
+
+    print("The total number of trainable parameters are: " + str(encodeco_model.count_params()))
+    print("Model summary: ")
+    print(encodeco_model.summary())
+
+    encodeco_model.fit(x, preproc_french_sentences, epochs=args.epochs, batch_size=args.batch_size, 
+                        validation_split=args.validation_split, callbacks=cb_list)
+
+    print(logits_to_text(encodeco_model.predict(x[:1])[0], french_tokenizer))
+
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--epochs",type=int,default=2,help="Number of iterations to run the algorithm")
+    parser.add_argument("--batch_size",type=int,default=1024,help="Batch size to consider for one gradient update")
+    parser.add_argument("--learning_rate",type=float,default=0.01,help="Learning rate value")
+    parser.add_argument("--validation_split",type=float,default=0.2,help="Validation fraction")
+    parser.add_argument("--monitor",type=str,default='val_accuracy',help="Value to monitor for early stopping")
+    parser.add_argument("--min_delta",type=float,default=1.0,help="Minimum increase/decrease in the monitored value")
+    parser.add_argument("--patience",type=int,default=5,help="Minimum number of epochs to wati before triggering early stopping")
+    args, unknown = parser.parse_known_args()
+    main(args)
 
 
 
