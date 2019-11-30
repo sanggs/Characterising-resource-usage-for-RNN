@@ -1,0 +1,26 @@
+Batch Size: 512 Learning Rate: 0.1
+Epoch 1 Begin.
+| ID | GPU | MEM |
+------------------
+|  0 | 42% | 96% |
+Batch 2 Begin.
+| ID | GPU | MEM |
+------------------
+|  0 | 46% | 96% |
+Batch 2 End.
+| ID | GPU | MEM |
+------------------
+|  0 | 43% | 96% |
+Batch 20 Begin.
+| ID | GPU | MEM |
+------------------
+|  0 | 60% | 96% |
+Batch 20 End.
+| ID | GPU | MEM |
+------------------
+|  0 | 60% | 96% |
+Epoch 1 End.
+| ID | GPU | MEM |
+------------------
+|  0 | 47% | 96% |
+---------------
