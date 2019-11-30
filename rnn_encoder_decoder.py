@@ -5,7 +5,9 @@ import argparse
 import numpy as np
 #import project_tests as tests
 import tensorflow as tf
-from tensorflow.python.client import timeline
+#from tensorflow.python.client import timeline
+import GPUtil
+import contextlib
 
 from tensorflow.keras.models import Sequential
 
@@ -21,9 +23,47 @@ from tensorflow.keras.callbacks import ModelCheckpoint, EarlyStopping
 
 from tensorflow.python.client import device_lib
 
+class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
+    def __init__(self):
+        self.record = False
+
+    def on_train_batch_end(self, batch, logs=None):
+        if(self.record == True):
+            if(batch == 2 or batch == 20):
+                with open('logs/GPU_Utils.txt', 'a') as f:
+                    with contextlib.redirect_stdout(f):
+                        print('Batch {} End.'.format(batch))
+                        GPUtil.showUtilization()
+
+    def on_train_batch_begin(self, batch, logs=None):
+        if(self.record == True):
+            if(batch == 2 or batch == 20):
+                with open('logs/GPU_Utils.txt', 'a') as f:
+                    with contextlib.redirect_stdout(f):
+                        print('Batch {} Begin.'.format(batch))
+                        GPUtil.showUtilization()
+
+    def on_epoch_begin(self, epoch, logs=None):
+        if(epoch == 1):
+            self.record = True
+            with open('logs/GPU_Utils.txt', 'a') as f:
+                with contextlib.redirect_stdout(f):
+                    print('Epoch {} Begin.'.format(epoch))
+                    GPUtil.showUtilization()
+
+    def on_epoch_end(self, epoch, logs=None):
+        if(self.record == True):
+            self.record = False
+            with open('logs/GPU_Utils.txt', 'a') as f:
+                with contextlib.redirect_stdout(f):
+                    print('Epoch {} End.'.format(epoch))
+                    GPUtil.showUtilization()
+                    print('---------------')
+
+
 class EncoderDecoder:
     '''
-    --epochs",type=int,default=2,help="Number of iterations to run the algorithm")
+    parser.add_argument("--epochs",type=int,default=2,help="Number of iterations to run the algorithm")
     parser.add_argument("--batch_size",type=int,default=1024,help="Batch size to consider for one gradient update")
     parser.add_argument("--learning_rate",type=float,default=0.01,help="Learning rate value")
     parser.add_argument("--validation_split",type=float,default=0.2,help="Validation fraction")
@@ -159,18 +199,17 @@ class EncoderDecoder:
         x = np.float32(x)
 
         es = EarlyStopping(monitor=self.monitor, mode='auto', verbose=1, patience=self.patience)
-        cb_list = [es]
+        cb_list = [es, GPUUtilPrintingCallback()]
 
         encodeco_model = self.encdec_model(x.shape, self.preprocessedTarget.shape[1],
             len(self.sourceTokenizer.word_index)+1,len(self.targetTokenizer.word_index)+1)
 
-        run_options = tf.compat.v1.RunOptions(trace_level=tf.compat.v1.RunOptions.FULL_TRACE)
-        run_metadata= tf.compat.v1.RunMetadata()
+        #run_options = tf.compat.v1.RunOptions(trace_level=tf.compat.v1.RunOptions.FULL_TRACE)
+        #run_metadata= tf.compat.v1.RunMetadata()
 
         encodeco_model.compile(loss = sparse_categorical_crossentropy,
                      optimizer = Adam(self.learning_rate),
-                     metrics = ['accuracy'],
-                     options=run_options, run_metadata=run_metadata)
+                     metrics = ['accuracy'])
 
         print("The total number of trainable parameters are: " + str(encodeco_model.count_params()))
         print("Model summary: ")
@@ -180,8 +219,5 @@ class EncoderDecoder:
                             validation_split=self.validation_split, callbacks=cb_list)
 
         print(self.logits_to_text(encodeco_model.predict(x[:1])[0], self.targetTokenizer))
-        tl = timeline.Timeline(run_metadata.step_stats)
-        ctf = tl.generate_chrome_trace_format()
-        fileName = 'logs/'+str(self.batch_size)+'_'+str(self.learning_rate)+'.json'
-        with open(fileName, 'w') as f:
-            f.write(ctf)
+
+
