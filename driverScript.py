@@ -1,5 +1,6 @@
 from rnn_encoder_decoder import EncoderDecoder
 import contextlib
+import time
 
 if __name__ == '__main__':
     '''
@@ -16,6 +17,7 @@ if __name__ == '__main__':
                     print('Batch Size: {} Learning Rate: {}'.format(batch_size, learning_rate))
             trainer = EncoderDecoder(epochs=2, batch_size=batch_size, learning_rate=learning_rate, validation_split=0.2, monitor='val_acc', min_delta=1.0, patience=5)
             trainer.train_model()
+            time.sleep(300) #sleep for 5 min => To know difference in graph
             batch_size = batch_size * 2
         learning_rate = learning_rate * 10
 
