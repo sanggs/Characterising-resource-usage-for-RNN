@@ -182,25 +182,10 @@ if __name__ == '__main__':
     parser.add_argument("--batch_size",type=int,default=1024,help="Batch size to consider for one gradient update")
     parser.add_argument("--learning_rate",type=float,default=0.01,help="Learning rate value")
     parser.add_argument("--validation_split",type=float,default=0.2,help="Validation fraction")
-    parser.add_argument("--monitor",type=str,default='val_accuracy',help="Value to monitor for early stopping")
+    parser.add_argument("--monitor",type=str,default='val_acc',help="Value to monitor for early stopping")
     parser.add_argument("--min_delta",type=float,default=1.0,help="Minimum increase/decrease in the monitored value")
     parser.add_argument("--patience",type=int,default=5,help="Minimum number of epochs to wati before triggering early stopping")
     args, unknown = parser.parse_known_args()
     main(args)
-
-#tests.test_encdec_model(encdec_model)
-tmp_x = pad(preproc_english_sentences)
-tmp_x = tmp_x.reshape((-1, preproc_english_sentences.shape[1], 1))
-tmp_x = np.float32(tmp_x)
-
-encodeco_model = encdec_model(
-    tmp_x.shape,
-    preproc_french_sentences.shape[1],
-    len(english_tokenizer.word_index)+1,
-    len(french_tokenizer.word_index)+1)
-encodeco_model.fit(tmp_x, preproc_french_sentences, batch_size=128, epochs=10, validation_split=0.2)
-print(logits_to_text(encodeco_model.predict(tmp_x[:1])[0], french_tokenizer))
-
-
 
 
