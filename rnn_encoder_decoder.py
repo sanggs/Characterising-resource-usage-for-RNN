@@ -44,7 +44,7 @@ class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
                         GPUtil.showUtilization()
 
     def on_epoch_begin(self, epoch, logs=None):
-        if(epoch == 1):
+        if(epoch == 5):
             self.record = True
             with open('logs/GPU_Utils.txt', 'a') as f:
                 with contextlib.redirect_stdout(f):
@@ -71,7 +71,7 @@ class EncoderDecoder:
     parser.add_argument("--min_delta",type=float,default=1.0,help="Minimum increase/decrease in the monitored value")
     parser.add_argument("--patience",type=int,default=5,help="Minimum number of epochs to wati before triggering early stopping")
     '''
-    def __init__(self, epochs=2, batch_size=512, learning_rate=1e-3, validation_split=0.2, monitor='val_acc', min_delta=1.0, patience=5):
+    def __init__(self, epochs=500, batch_size=512, learning_rate=1e-3, validation_split=0.2, monitor='val_acc', min_delta=0.0001, patience=50):
         self.epochs = epochs
         self.batch_size = batch_size
         self.learning_rate = learning_rate
@@ -85,6 +85,12 @@ class EncoderDecoder:
         self.preprocessedTarget = None
         self.sourceTokenizer = None
         self.targetTokenizer = None
+
+    def setBatchSize(self, batch_size):
+        self.batch_size = batch_size
+
+    def setLearningRate(self, learning_rate):
+        self.learning_rate = learning_rate
 
     def print_device(self):
         print(device_lib.list_local_devices())
@@ -190,10 +196,10 @@ class EncoderDecoder:
         return model
 
     def train_model(self):
-        self.print_device()
-        self.loadData()
-        self.seeSampleData()
-        self.prepareData()
+        #self.print_device()
+        #self.loadData()
+        #self.seeSampleData()
+        #self.prepareData()
         x = self.pad(self.preprocessedSource)
         x = x.reshape((-1, self.preprocessedSource.shape[1], 1))
         x = np.float32(x)
@@ -204,9 +210,6 @@ class EncoderDecoder:
         encodeco_model = self.encdec_model(x.shape, self.preprocessedTarget.shape[1],
             len(self.sourceTokenizer.word_index)+1,len(self.targetTokenizer.word_index)+1)
 
-        #run_options = tf.compat.v1.RunOptions(trace_level=tf.compat.v1.RunOptions.FULL_TRACE)
-        #run_metadata= tf.compat.v1.RunMetadata()
-
         encodeco_model.compile(loss = sparse_categorical_crossentropy,
                      optimizer = Adam(self.learning_rate),
                      metrics = ['accuracy'])
@@ -214,10 +217,13 @@ class EncoderDecoder:
         print("The total number of trainable parameters are: " + str(encodeco_model.count_params()))
         print("Model summary: ")
         print(encodeco_model.summary())
+        fileName = 'logs/11_30/b_'+str(self.batch_size)+'_lr_'+str(int(self.learning_rate*1e5))+'.txt'
+        with open(fileName, 'w') as f:
+            with contextlib.redirect_stdout(f):
+                encodeco_model.fit(x, self.preprocessedTarget, epochs=self.epochs, batch_size=self.batch_size, validation_split=self.validation_split, callbacks=cb_list)
 
-        encodeco_model.fit(x, self.preprocessedTarget, epochs=self.epochs, batch_size=self.batch_size,
-                            validation_split=self.validation_split, callbacks=cb_list)
-
-        print(self.logits_to_text(encodeco_model.predict(x[:1])[0], self.targetTokenizer))
+        print("training done")
+        print("-------------")
+        #print(self.logits_to_text(encodeco_model.predict(x[:1])[0], self.targetTokenizer))
 
 
