@@ -207,23 +207,22 @@ class Bidirectional:
         es = EarlyStopping(monitor=self.monitor, mode='auto', verbose=1, patience=self.patience)
         cb_list = [es, GPUUtilPrintingCallback()]
 
-        bidi_model = bd_model(
-        x.shape,
-        preproc_french_sentences.shape[1],
-        len(english_tokenizer.word_index)+1,
-        len(french_tokenizer.word_index)+1)
+        bidi_model = bd_model(x.shape,
+            preproc_french_sentences.shape[1],
+            len(english_tokenizer.word_index)+1,
+            len(french_tokenizer.word_index)+1)
 
         bidi_model.compile(loss = sparse_categorical_crossentropy, 
                      optimizer = Adam(args.learning_rate), 
                      metrics = ['accuracy'])
 
-        print("The total number of trainable parameters are: " + str(encodeco_model.count_params()))
+        print("The total number of trainable parameters are: " + str(bidi_model.count_params()))
         print("Model summary: ")
-        print(encodeco_model.summary())
+        print(bidi_model.summary())
         fileName = 'logs/11_30/b_'+str(self.batch_size)+'_lr_'+str(int(self.learning_rate*1e5))+'.txt'
         with open(fileName, 'w') as f:
             with contextlib.redirect_stdout(f):
-                encodeco_model.fit(x, self.preprocessedTarget, epochs=self.epochs, batch_size=self.batch_size, validation_split=self.validation_split, callbacks=cb_list)
+                bidi_model.fit(x, self.preprocessedTarget, epochs=self.epochs, batch_size=self.batch_size, validation_split=self.validation_split, callbacks=cb_list)
 
         print("training done")
         print("-------------")
