@@ -61,7 +61,7 @@ class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
                     print('---------------')
 
 
-class Bidirectional:
+class BDRNN:
     '''
     parser.add_argument("--epochs",type=int,default=2,help="Number of iterations to run the algorithm")
     parser.add_argument("--batch_size",type=int,default=1024,help="Batch size to consider for one gradient update")

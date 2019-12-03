@@ -1,5 +1,5 @@
 from rnn_encoder_decoder import EncoderDecoder
-from brnn import Bidirectional
+from brnn import BDRNN
 import contextlib
 import time
 
@@ -11,7 +11,7 @@ if __name__ == '__main__':
     bs = [512, 16384] #specify start and end
     learning_rate = lr[0]
     batch_size = bs[0]
-    trainer = Bidirectional(epochs=2, batch_size=batch_size, learning_rate=learning_rate, validation_split=0.2, monitor='val_acc', min_delta=0.001, patience=50)
+    trainer = BDRNN(epochs=2, batch_size=batch_size, learning_rate=learning_rate, validation_split=0.2, monitor='val_acc', min_delta=0.001, patience=50)
     trainer.print_device()
     trainer.loadData()
     #trainer.seeSampleData()
