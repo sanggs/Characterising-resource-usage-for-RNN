@@ -30,7 +30,7 @@ class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
     def on_train_batch_end(self, batch, logs=None):
         if(self.record == True):
             if(batch == 2 or batch == 20):
-                with open('logs/GPU_Utils.txt', 'a') as f:
+                with open('logs/BRNN_GPU_Utils.txt', 'a') as f:
                     with contextlib.redirect_stdout(f):
                         print('Batch {} End.'.format(batch))
                         GPUtil.showUtilization()
@@ -38,7 +38,7 @@ class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
     def on_train_batch_begin(self, batch, logs=None):
         if(self.record == True):
             if(batch == 2 or batch == 20):
-                with open('logs/GPU_Utils.txt', 'a') as f:
+                with open('logs/BRNN_GPU_Utils.txt', 'a') as f:
                     with contextlib.redirect_stdout(f):
                         print('Batch {} Begin.'.format(batch))
                         GPUtil.showUtilization()
@@ -46,7 +46,7 @@ class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
     def on_epoch_begin(self, epoch, logs=None):
         if(epoch == 5):
             self.record = True
-            with open('logs/GPU_Utils.txt', 'a') as f:
+            with open('logs/BRNN_GPU_Utils.txt', 'a') as f:
                 with contextlib.redirect_stdout(f):
                     print('Epoch {} Begin.'.format(epoch))
                     GPUtil.showUtilization()
@@ -54,7 +54,7 @@ class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         if(self.record == True):
             self.record = False
-            with open('logs/GPU_Utils.txt', 'a') as f:
+            with open('logs/BRNN_GPU_Utils.txt', 'a') as f:
                 with contextlib.redirect_stdout(f):
                     print('Epoch {} End.'.format(epoch))
                     GPUtil.showUtilization()
@@ -186,7 +186,7 @@ class Bidirectional:
         #print('`logits_to_text` function loaded.')
 
 
-    def bd_model(input_shape, output_sequence_length, english_vocab_size, french_vocab_size):
+    def bd_model(self, input_shape, output_sequence_length, english_vocab_size, french_vocab_size):
    
         model = Sequential()
         model.add(Bidirectional(GRU(128, return_sequences = True, dropout = 0.1), 
@@ -200,17 +200,17 @@ class Bidirectional:
         #self.loadData()
         #self.seeSampleData()
         #self.prepareData()
-        x = pad(preproc_english_sentences, preproc_french_sentences.shape[1])
-        x = x.reshape((-1, preproc_french_sentences.shape[-2], 1))
+        x = self.pad(self.preprocessedSource, self.preprocessedTarget.shape[1])
+        x = x.reshape((-1, self.preprocessedTarget.shape[-2], 1))
         x = np.float32(x)
 
         es = EarlyStopping(monitor=self.monitor, mode='auto', verbose=1, patience=self.patience)
         cb_list = [es, GPUUtilPrintingCallback()]
 
-        bidi_model = bd_model(x.shape,
-            preproc_french_sentences.shape[1],
-            len(english_tokenizer.word_index)+1,
-            len(french_tokenizer.word_index)+1)
+        bidi_model = self.bd_model(x.shape,
+            self.preprocessedTarget.shape[1],
+            len(self.sourceTokenizer.word_index)+1,
+            len(self.targetTokenizer.word_index)+1)
 
         bidi_model.compile(loss = sparse_categorical_crossentropy, 
                      optimizer = Adam(args.learning_rate), 
@@ -219,7 +219,7 @@ class Bidirectional:
         print("The total number of trainable parameters are: " + str(bidi_model.count_params()))
         print("Model summary: ")
         print(bidi_model.summary())
-        fileName = 'logs/11_30/b_'+str(self.batch_size)+'_lr_'+str(int(self.learning_rate*1e5))+'.txt'
+        fileName = 'logs/brnn/b_'+str(self.batch_size)+'_lr_'+str(int(self.learning_rate*1e5))+'.txt'
         with open(fileName, 'w') as f:
             with contextlib.redirect_stdout(f):
                 bidi_model.fit(x, self.preprocessedTarget, epochs=self.epochs, batch_size=self.batch_size, validation_split=self.validation_split, callbacks=cb_list)

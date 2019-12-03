@@ -30,7 +30,7 @@ class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
     def on_train_batch_end(self, batch, logs=None):
         if(self.record == True):
             if(batch == 2 or batch == 20):
-                with open('logs/GPU_Utils.txt', 'a') as f:
+                with open('logs/BRNN_GPU_Utils.txt', 'a') as f:
                     with contextlib.redirect_stdout(f):
                         print('Batch {} End.'.format(batch))
                         GPUtil.showUtilization()
@@ -38,7 +38,7 @@ class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
     def on_train_batch_begin(self, batch, logs=None):
         if(self.record == True):
             if(batch == 2 or batch == 20):
-                with open('logs/GPU_Utils.txt', 'a') as f:
+                with open('logs/BRNN_GPU_Utils.txt', 'a') as f:
                     with contextlib.redirect_stdout(f):
                         print('Batch {} Begin.'.format(batch))
                         GPUtil.showUtilization()
@@ -46,7 +46,7 @@ class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
     def on_epoch_begin(self, epoch, logs=None):
         if(epoch == 5):
             self.record = True
-            with open('logs/GPU_Utils.txt', 'a') as f:
+            with open('logs/BRNN_GPU_Utils.txt', 'a') as f:
                 with contextlib.redirect_stdout(f):
                     print('Epoch {} Begin.'.format(epoch))
                     GPUtil.showUtilization()
@@ -54,7 +54,7 @@ class GPUUtilPrintingCallback(tf.keras.callbacks.Callback):
     def on_epoch_end(self, epoch, logs=None):
         if(self.record == True):
             self.record = False
-            with open('logs/GPU_Utils.txt', 'a') as f:
+            with open('logs/BRNN_GPU_Utils.txt', 'a') as f:
                 with contextlib.redirect_stdout(f):
                     print('Epoch {} End.'.format(epoch))
                     GPUtil.showUtilization()
@@ -98,8 +98,10 @@ class EncoderDecoder:
     def loadData(self):
         # Load English data
         self.sourceLanguage = helper.load_data('data/small_vocab_en')
+        #self.sourceLanguage = helper.load_data('data/europarl-v7.fr-en.en')
         # Load French data
         self.targetLanguage = helper.load_data('data/small_vocab_fr')
+        #self.targetLanguage = helper.load_data('data/europarl-v7.fr-en.fr')
         print('Dataset Loaded')
 
     def seeSampleData(self):
@@ -217,7 +219,7 @@ class EncoderDecoder:
         print("The total number of trainable parameters are: " + str(encodeco_model.count_params()))
         print("Model summary: ")
         print(encodeco_model.summary())
-        fileName = 'logs/11_30/b_'+str(self.batch_size)+'_lr_'+str(int(self.learning_rate*1e5))+'.txt'
+        fileName = 'logs/brnn/b_'+str(self.batch_size)+'_lr_'+str(int(self.learning_rate*1e5))+'.txt'
         with open(fileName, 'w') as f:
             with contextlib.redirect_stdout(f):
                 encodeco_model.fit(x, self.preprocessedTarget, epochs=self.epochs, batch_size=self.batch_size, validation_split=self.validation_split, callbacks=cb_list)
