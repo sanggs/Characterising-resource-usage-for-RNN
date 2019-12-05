@@ -213,7 +213,7 @@ class BDRNN:
             len(self.targetTokenizer.word_index)+1)
 
         bidi_model.compile(loss = sparse_categorical_crossentropy, 
-                     optimizer = Adam(args.learning_rate), 
+                     optimizer = Adam(self.learning_rate), 
                      metrics = ['accuracy'])
 
         print("The total number of trainable parameters are: " + str(bidi_model.count_params()))
